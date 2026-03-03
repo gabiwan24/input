@@ -30,20 +30,7 @@
         </h1>
 
         <div class="space-y-6">
-            <!-- n8n Config (Webhook URL) -->
-            <div class="p-4 border border-zinc-800 rounded-xl bg-zinc-900/30">
-                <label for="webhookUrl" class="block text-[10px] uppercase tracking-[0.2em] text-gray-500 mb-2 font-bold">n8n Webhook Endpoint</label>
-                <input 
-                    type="text" 
-                    id="webhookUrl" 
-                    placeholder="https://n8n.deine-instanz.de/webhook/..." 
-                    class="w-full p-2 rounded-lg text-xs"
-                >
-            </div>
-
-            <!-- Main Form -->
             <div class="space-y-4">
-                <!-- Thema -->
                 <div>
                     <label for="thema" class="block text-xs uppercase tracking-widest text-gray-500 mb-2">Thema</label>
                     <input 
@@ -54,7 +41,6 @@
                     >
                 </div>
 
-                <!-- URL -->
                 <div>
                     <label for="url" class="block text-xs uppercase tracking-widest text-gray-500 mb-2">URL (Link)</label>
                     <input 
@@ -65,7 +51,6 @@
                     >
                 </div>
 
-                <!-- Message -->
                 <div>
                     <label for="message" class="block text-xs uppercase tracking-widest text-gray-500 mb-2">Deine Nachricht</label>
                     <textarea 
@@ -77,7 +62,6 @@
                 </div>
             </div>
 
-            <!-- Send Button -->
             <button 
                 onclick="sendToN8N()" 
                 id="sendBtn"
@@ -90,44 +74,29 @@
                 </svg>
             </button>
 
-            <!-- Status Message -->
             <div id="status" class="text-center text-sm mt-4 min-h-[20px] font-medium"></div>
         </div>
     </div>
 
     <script>
-        // Webhook URL aus LocalStorage laden
-        const webhookInput = document.getElementById('webhookUrl');
-        const savedUrl = localStorage.getItem('n8n_webhook_url');
-        if (savedUrl) {
-            webhookInput.value = savedUrl;
-        }
-
-        // URL speichern wenn sie sich ändert
-        webhookInput.addEventListener('change', (e) => {
-            localStorage.setItem('n8n_webhook_url', e.target.value);
-        });
+        // Die Produktions-URL ist hier fest hinterlegt
+        const WEBHOOK_URL = "https://n8n.kms-team.com/webhook/artikel-eingang";
 
         async function sendToN8N() {
-            const webhookUrl = webhookInput.value.trim();
             const thema = document.getElementById('thema').value.trim();
             const urlField = document.getElementById('url').value.trim();
             const message = document.getElementById('message').value.trim();
             
-            if (!webhookUrl) {
-                showStatus('Bitte Webhook URL eingeben.', 'text-red-500');
-                return;
-            }
             if (!thema && !message) {
                 showStatus('Bitte zumindest ein Thema oder eine Nachricht eingeben.', 'text-yellow-500');
                 return;
             }
 
             setLoading(true);
-            showStatus('', '');
+            showStatus('Verarbeite Artikel...', 'text-gray-400');
 
             try {
-                const response = await fetch(webhookUrl, {
+                const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -142,17 +111,16 @@
                 });
 
                 if (response.ok) {
-                    showStatus('Erfolgreich gesendet!', 'text-green-400');
+                    showStatus('Erfolgreich gesendet! Die KI analysiert jetzt den Artikel.', 'text-green-400');
                     // Felder leeren
                     document.getElementById('thema').value = '';
                     document.getElementById('url').value = '';
                     document.getElementById('message').value = '';
                 } else {
-                    const errorText = await response.text();
-                    showStatus(`Fehler: ${response.status}`, 'text-red-500');
+                    showStatus(`Fehler beim Senden: ${response.status}`, 'text-red-500');
                 }
             } catch (error) {
-                showStatus(`Netzwerkfehler: ${error.message}`, 'text-red-500');
+                showStatus(`Netzwerkfehler: Verbindung zu n8n fehlgeschlagen.`, 'text-red-500');
             } finally {
                 setLoading(false);
             }
@@ -180,7 +148,7 @@
             if (colorClass.includes('green')) {
                 setTimeout(() => {
                     if (statusDiv.textContent === text) statusDiv.textContent = '';
-                }, 5000);
+                }, 8000);
             }
         }
     </script>
